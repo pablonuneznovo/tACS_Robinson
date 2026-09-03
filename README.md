@@ -1,8 +1,7 @@
 # Reproducing the original paper results
 
 This folder contains the minimal analysis scripts for the original paper
-pipeline. It uses the original 40-Hz fitting range; the exploratory 25-Hz
-cutoff scripts are intentionally excluded.
+pipeline.
 
 ## Contents
 
