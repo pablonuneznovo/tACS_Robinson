@@ -16,7 +16,7 @@ pipeline.
 
 No participant data, BrainTrak source, corticothalamic-model source, or FieldTrip
 source is included. These must be obtained separately and are not redistributed
-by this repository.
+by this repository. The participant data is available from the authors upon reasonable request.
 
 ## External MATLAB dependencies
 
