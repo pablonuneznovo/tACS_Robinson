@@ -20,9 +20,7 @@ pipeline and its Supplementary Information.
 - `python/generate_sm_figure_6.py` — Supplementary Figure S6.
 - `python/generate_sm_figure_7.py` — Supplementary Figure S7.
 - `python/generate_sm_figure_8.py` — Supplementary Figure S8.
-- `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis reported in the manuscript.
-- `python/clinical_crsr.py` — shared CRS-R table reader.
-- `python/reproduction_config.py` — portable data and output path configuration.
+- `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis.
 
 No participant data, BrainTrak source, corticothalamic-model source, or FieldTrip
 source is included. These must be obtained separately and are not redistributed
