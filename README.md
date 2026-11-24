@@ -9,17 +9,17 @@ pipeline and its Supplementary Information.
   and original Robinson/BrainTrak fitting to approximately 1.1–40 Hz.
 - `matlab/N1_fit_data_XYZab_cutoff25.m` — fitting to approximately 1.1–25 Hz for Supplementary Figure S6.
 - `matlab/N10_repeat_parameter_fits.m` — 100 repeat fits for Day 1 and the one-week follow-up.
-- `python/generate_figure_2.py` — Figure 2 (`Figure2.png`).
-- `python/generate_figure_3.py` — Figure 3 (`Figure3.png`).
-- `python/generate_figure_4.py` — Figure 4 (`Figure4.png`) and its statistics table.
-- `python/generate_sm_figure_1.py` — Supplementary Figure S1 (`SM_Figure1.png`).
-- `python/generate_sm_figure_2.py` — Supplementary Figure S2 (`SM_Figure2.png`).
-- `python/generate_sm_figure_3.py` — Supplementary Figure S3 (`SM_Figure3.png`).
-- `python/generate_sm_figure_4.py` — Supplementary Figure S4 (`SM_Figure4.png`).
-- `python/generate_sm_figure_5.py` — Supplementary Figure S5 (`SM_Figure5.png`).
-- `python/generate_sm_figure_6.py` — Supplementary Figure S6 (`SM_Figure6.png`).
-- `python/generate_sm_figure_7.py` — Supplementary Figure S7 (`SM_Figure7.png`).
-- `python/generate_sm_figure_8.py` — Supplementary Figure S8 (`SM_Figure8.png`).
+- `python/generate_figure_2.py` — Figure 2.
+- `python/generate_figure_3.py` — Figure 3.
+- `python/generate_figure_4.py` — Figure 4 and its statistics table.
+- `python/generate_sm_figure_1.py` — Supplementary Figure S1.
+- `python/generate_sm_figure_2.py` — Supplementary Figure S2.
+- `python/generate_sm_figure_3.py` — Supplementary Figure S3.
+- `python/generate_sm_figure_4.py` — Supplementary Figure S4.
+- `python/generate_sm_figure_5.py` — Supplementary Figure S5.
+- `python/generate_sm_figure_6.py` — Supplementary Figure S6.
+- `python/generate_sm_figure_7.py` — Supplementary Figure S7.
+- `python/generate_sm_figure_8.py` — Supplementary Figure S8.
 - `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis reported in the manuscript.
 - `python/clinical_crsr.py` — shared CRS-R table reader.
 - `python/reproduction_config.py` — portable data and output path configuration.
