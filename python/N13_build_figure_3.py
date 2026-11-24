@@ -16,6 +16,7 @@ from scipy.io import loadmat
 from scipy.stats import spearmanr
 import warnings
 from reproduction_config import CRSR_XLSX, FITTED_DIR, FIGURES_DIR
+from clinical_crsr import load_crsr_table
 
 warnings.filterwarnings("ignore")
 
@@ -83,63 +84,10 @@ print(f"Loaded {S} subjects with {P} parameters.")
 # =============================================================================
 # 3. LOAD & CLEAN CRS-R DATA
 # =============================================================================
-crsr_total = np.full((S, 7, 2), np.nan)
-crsr_subscales = np.full((S, 7, 2, 6), np.nan)
 subscale_names = ['Auditory', 'Visual', 'Motor', 'Oromotor', 'Communication', 'Arousal']
 
 print("Parsing Clinical Excel Data...")
-df_crsr = pd.read_excel(crsr_file, header=None)
-
-last_valid_case = np.nan
-last_valid_sess = np.nan
-
-for idx, row in df_crsr.iterrows():
-    try:
-        num_case = float(row[0])
-        if not np.isnan(num_case): last_valid_case = num_case
-    except:
-        pass
-
-    try:
-        num_sess = float(row[1])
-        if not np.isnan(num_sess): last_valid_sess = num_sess
-    except:
-        pass
-
-    if np.isnan(last_valid_case): continue
-
-    s_idx = [i for i, sid in enumerate(sub_ids) if str(int(last_valid_case)) in sid]
-    if not s_idx: continue
-    s = s_idx[0]
-    sess = last_valid_sess
-    tp = str(row[3]).strip().lower()
-
-    try:
-        score = float(row[10])
-    except:
-        score = np.nan
-
-    subs = np.full(6, np.nan)
-    for c in range(6):
-        try:
-            subs[c] = float(row[4 + c])
-        except:
-            pass
-
-    if 'pre' in tp:
-        r_idx, sess_idx = 0, int(sess) - 1
-    elif 'post' in tp and 'week' not in tp and 'protocol' not in tp:
-        r_idx, sess_idx = 1, int(sess) - 1
-    elif 'protocol' in tp:
-        r_idx, sess_idx = 0, 5
-    elif 'week' in tp:
-        r_idx, sess_idx = 0, 6
-    else:
-        continue
-
-    if 0 <= sess_idx < 7:
-        crsr_total[s, sess_idx, r_idx] = score
-        crsr_subscales[s, sess_idx, r_idx, :] = subs
+crsr_total, crsr_subscales = load_crsr_table(crsr_file, sub_ids, len(subscale_names))
 
 # =============================================================================
 # 4. FIGURE 3 SETUP: GRIDSPEC LAYOUT
@@ -282,7 +230,7 @@ plt.tight_layout()
 fig.subplots_adjust(wspace=0.35, hspace=0.45)
 
 print("Figure 3 successfully generated. Saving high-res version...")
-plt.savefig(os.path.join(FIGURES_DIR, 'Figure_3_HighRes.png'), dpi=200)
+plt.savefig(os.path.join(FIGURES_DIR, 'Legacy_Flat_Spearman_HighRes.png'), dpi=200)
 
 print("Save complete. Displaying on screen...")
 plt.show()

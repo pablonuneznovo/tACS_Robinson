@@ -4,10 +4,7 @@ import warnings
 
 import matplotlib
 
-if os.environ.get("SHOW_FIGURE", "1") == "0":
-    matplotlib.use("Agg")
-else:
-    matplotlib.use("TkAgg")
+matplotlib.use("Agg" if os.environ.get("SHOW_FIGURE", "0") == "0" else "TkAgg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -15,7 +12,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.gridspec import GridSpec
 from scipy.io import loadmat
 from scipy.stats import spearmanr
-from reproduction_config import CRSR_XLSX, FIGURES_DIR as REPRO_FIGURES_DIR, FITTED_DIR
+from clinical_crsr import load_crsr_table
+from reproduction_config import CRSR_XLSX, FITTED_DIR, FIGURES_DIR as CONFIG_FIGURES_DIR
 
 try:
     import pingouin as pg
@@ -38,13 +36,13 @@ warnings.filterwarnings("ignore")
 
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
-FIGURES_DIR = str(REPRO_FIGURES_DIR)
+FIGURES_DIR = str(CONFIG_FIGURES_DIR)
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 DATA_DIR = str(FITTED_DIR)
 CRSR_FILE = str(CRSR_XLSX)
 
-OUTPUT_FIG = os.path.join(FIGURES_DIR, "Figure_4_RMcorr_HighRes.png")
+OUTPUT_FIG = os.path.join(FIGURES_DIR, "Figure 4 v3.png")
 OUTPUT_CSV = os.path.join(FIGURES_DIR, "Figure_4_RMcorr_stats.csv")
 
 TARGET_PARAMS = ["X", "Y", "Z", "Alpha", "Beta"]
@@ -106,73 +104,8 @@ def load_model_parameters():
     return params, pnames, subject_ids
 
 
-def subject_case_id(subject_id):
-    # sub-001 -> 1, sub-010 -> 10. Keeps matching exact and avoids 1 matching 10.
-    digits = "".join(ch for ch in subject_id if ch.isdigit())
-    return int(digits) if digits else None
-
-
 def load_crsr(subject_ids):
-    crsr_total = np.full((len(subject_ids), 7, 2), np.nan)
-    crsr_subscales = np.full((len(subject_ids), 7, 2, len(SUBSCALE_NAMES)), np.nan)
-    case_to_subject = {subject_case_id(sid): i for i, sid in enumerate(subject_ids)}
-
-    df_crsr = pd.read_excel(CRSR_FILE, header=None)
-    last_valid_case = np.nan
-    last_valid_session = np.nan
-
-    for _, row in df_crsr.iterrows():
-        try:
-            case = float(row[0])
-            if not np.isnan(case):
-                last_valid_case = case
-        except Exception:
-            pass
-
-        try:
-            session = float(row[1])
-            if not np.isnan(session):
-                last_valid_session = session
-        except Exception:
-            pass
-
-        if np.isnan(last_valid_case) or np.isnan(last_valid_session):
-            continue
-
-        subject_idx = case_to_subject.get(int(last_valid_case))
-        if subject_idx is None:
-            continue
-
-        timepoint = str(row[3]).strip().lower()
-
-        try:
-            total_score = float(row[10])
-        except Exception:
-            total_score = np.nan
-
-        subscales = np.full(len(SUBSCALE_NAMES), np.nan)
-        for sub_idx in range(len(SUBSCALE_NAMES)):
-            try:
-                subscales[sub_idx] = float(row[4 + sub_idx])
-            except Exception:
-                pass
-
-        if "pre" in timepoint:
-            run_idx, session_idx = 0, int(last_valid_session) - 1
-        elif "post" in timepoint and "week" not in timepoint and "protocol" not in timepoint:
-            run_idx, session_idx = 1, int(last_valid_session) - 1
-        elif "protocol" in timepoint:
-            run_idx, session_idx = 0, 5
-        elif "week" in timepoint:
-            run_idx, session_idx = 0, 6
-        else:
-            continue
-
-        if 0 <= session_idx < 7:
-            crsr_total[subject_idx, session_idx, run_idx] = total_score
-            crsr_subscales[subject_idx, session_idx, run_idx, :] = subscales
-
-    return crsr_total, crsr_subscales
+    return load_crsr_table(CRSR_FILE, subject_ids, len(SUBSCALE_NAMES))
 
 
 def build_long_dataframe(params, pnames, subject_ids, crsr_total, crsr_subscales):
@@ -451,7 +384,9 @@ def main():
     else:
         print("  FE+time is CRS-R ~ parameter + session + C(subject), used as a linear time-drift robustness check.")
 
-    plt.show()
+    if os.environ.get("SHOW_FIGURE", "0") != "0":
+        plt.show()
+    plt.close(fig)
 
 
 if __name__ == "__main__":

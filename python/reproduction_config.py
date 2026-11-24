@@ -1,4 +1,4 @@
-"""Portable paths for reproducing the original paper analyses.
+"""Portable paths for reproducing the paper analyses.
 
 Set VANGUARD_ROOT to the directory containing the raw Vanguard subject folders.
 The remaining variables can be overridden when the clinical files or fitted
@@ -25,6 +25,7 @@ FITTED_DIR = _path_from_env(
 PSD_DIR = _path_from_env("VANGUARD_PSD_DIR", FITTED_DIR)
 CRSR_XLSX = _path_from_env("VANGUARD_CRSR_XLSX", VANGUARD_ROOT / "Supp. Table 1.xlsx")
 CRSR_CSV = _path_from_env("VANGUARD_CRSR_CSV", VANGUARD_ROOT / "updated_crsr_categories_pilot.csv")
+REPEAT_FITS_DIR = _path_from_env("VANGUARD_REPEAT_FITS_DIR", VANGUARD_ROOT / "repeat_fit_results 100")
 FIGURES_DIR = _path_from_env("PAPER_FIGURES_DIR", REPRO_ROOT / "figures")
 
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
