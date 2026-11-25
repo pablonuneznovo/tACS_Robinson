@@ -1,26 +1,26 @@
-# Reproducing the original paper results
-
-This folder contains the minimal analysis scripts for the original paper
-pipeline and its Supplementary Information.
-
 ## Contents
 
 - `matlab/N1_fit_data_XYZab.m` — FieldTrip preprocessing, Welch PSD estimation,
   and original Robinson/BrainTrak fitting to approximately 1.1–40 Hz.
 - `matlab/N1_fit_data_XYZab_cutoff25.m` — fitting to approximately 1.1–25 Hz for Supplementary Figure S6.
 - `matlab/N10_repeat_parameter_fits.m` — 100 repeat fits for Day 1 and the one-week follow-up.
-- `python/generate_figure_2.py` — Figure 2.
-- `python/generate_figure_3.py` — Figure 3.
-- `python/generate_figure_4.py` — Figure 4 and its statistics table.
-- `python/generate_sm_figure_1.py` — Supplementary Figure S1.
-- `python/generate_sm_figure_2.py` — Supplementary Figure S2.
-- `python/generate_sm_figure_3.py` — Supplementary Figure S3.
-- `python/generate_sm_figure_4.py` — Supplementary Figure S4.
-- `python/generate_sm_figure_5.py` — Supplementary Figure S5.
-- `python/generate_sm_figure_6.py` — Supplementary Figure S6.
-- `python/generate_sm_figure_7.py` — Supplementary Figure S7.
-- `python/generate_sm_figure_8.py` — Supplementary Figure S8.
-- `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis.
+- `python/generate_figure_2.py` — Figure 2 (`Figure2.png`), with individual Day 1, 24-hour and 1-week trajectories.
+- `python/generate_figure_3.py` — Figure 3 (`Figure3.png`).
+- `python/generate_figure_4.py` — Figure 4 (`Figure4.png`), session-adjusted CRS-R correlations and their statistics table.
+- `python/generate_sm_figure_1.py` — Supplementary Figure S1 (`SM_Figure1.png`).
+- `python/generate_sm_figure_2.py` — Supplementary Figure S2 (`SM_Figure2.png`).
+- `python/generate_sm_figure_3.py` — Supplementary Figure S3 (`SM_Figure3.png`), repeated-measures CRS-R correlations without session adjustment and their statistics table.
+- `python/generate_sm_figure_4.py` — Supplementary Figure S4 (`SM_Figure4.png`).
+- `python/generate_sm_figure_5.py` — Supplementary Figure S5 (`SM_Figure5.png`).
+- `python/generate_sm_figure_6.py` — Supplementary Figure S6 (`SM_Figure6.png`).
+- `python/generate_sm_figure_7.py` — Supplementary Figure S7 (`SM_Figure7.png`).
+- `python/generate_sm_figure_8.py` — Supplementary Figure S8 (`SM_Figure8.png`), the sTBI-only sensitivity figure.
+- `python/generate_sm_figure_9.py` — Supplementary Figure S9 (`SM_Figure9.png`), acute within-session changes.
+- `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis reported in the manuscript.
+- `python/analyze_followup_rank_biserial_cis.py` — signed effect sizes, confidence intervals and uncorrected p-values at both follow-ups (Supplementary Table T2).
+- `python/analyze_stbi_followup_sensitivity.py` — full-cohort and sTBI-only exact follow-up comparisons.
+- `python/clinical_crsr.py` — shared CRS-R table reader.
+- `python/reproduction_config.py` — portable data and output path configuration.
 
 No participant data, BrainTrak source, corticothalamic-model source, or FieldTrip
 source is included. These must be obtained separately and are not redistributed
@@ -106,15 +106,23 @@ python python/generate_sm_figure_5.py
 python python/generate_sm_figure_6.py
 python python/generate_sm_figure_7.py
 python python/generate_sm_figure_8.py
+python python/generate_sm_figure_9.py
 ```
 
 Supplementary Figure S6 requires the 25-Hz fitted results, and S7 requires the
 100 repeat fits.
 
-After generating Supplementary Figure S3, run the alpha–CRS-R repeat-fit analysis:
+After generating Figure 4, run the alpha–CRS-R repeat-fit analysis:
 
 ```bash
 python python/analyze_alpha_crsr_robustness.py
+```
+
+Generate Supplementary Table T2 with:
+
+```bash
+python python/analyze_followup_rank_biserial_cis.py
+python python/analyze_stbi_followup_sensitivity.py
 ```
 
 Figures and associated statistics are written to `figures/`. The scripts retain
