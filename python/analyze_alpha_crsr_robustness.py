@@ -16,7 +16,7 @@ import scienceplots
 from scipy.io import loadmat
 from scipy.stats import t as student_t
 from reproduction_config import FIGURES_DIR, REPEAT_FITS_DIR
-import generate_sm_figure_3 as paper
+import generate_figure_4 as paper
 
 REPEATS_DIR = REPEAT_FITS_DIR
 N_DRAWS = 10000

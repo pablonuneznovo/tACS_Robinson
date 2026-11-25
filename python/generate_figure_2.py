@@ -1,20 +1,27 @@
 import os
 import glob
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib
 
-if os.environ.get('SHOW_FIGURE', '1') == '0':
+if os.environ.get('SHOW_FIGURE', '0') == '0':
     matplotlib.use('Agg')
 else:
     matplotlib.use('TkAgg')  # Perfect for PyCharm/Desktop rendering
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches  # Imported for the rectangle legend
+from matplotlib.lines import Line2D
 import scienceplots  # Imports the science plotting styles
 from scipy.io import loadmat
 from scipy.stats import mannwhitneyu
 import warnings
 from reproduction_config import FITTED_DIR, FIGURES_DIR
+
+parser = argparse.ArgumentParser(description='Generate the main longitudinal figure, sTBI sensitivity figure, or supplementary acute-change plots.')
+parser.add_argument('--cohort', choices=['all', 'stbi'], default='all')
+parser.add_argument('--acute-only', action='store_true')
+args = parser.parse_args()
 
 # Suppress mean of empty slice warnings
 warnings.filterwarnings("ignore")
@@ -105,12 +112,21 @@ data_dir = str(FITTED_DIR)
 mat_files = sorted(glob.glob(os.path.join(data_dir, '*_model_fits.mat')))
 if not mat_files:
     raise FileNotFoundError(f"No fitted result files found in {data_dir}")
+expected_active = {'sub-001', 'sub-004', 'sub-005', 'sub-006', 'sub-007', 'sub-008'}
+expected_sham = {'sub-009', 'sub-010', 'sub-011', 'sub-012', 'sub-013'}
+expected_all = expected_active | expected_sham
+identified = [os.path.basename(f).replace('_model_fits.mat', '') for f in mat_files]
+if set(identified) != expected_all or len(identified) != len(expected_all):
+    raise ValueError(f'Unexpected cohort: {identified}')
+if args.cohort == 'stbi':
+    # participants.txt: sub-006 and sub-008 are the two anoxic cases.
+    mat_files = [f for f, sid in zip(mat_files, identified) if sid not in {'sub-006', 'sub-008'}]
 S = len(mat_files)
 T = 7
 R = 4
 
-active_idx = [0, 1, 2, 3, 4, 5]
-sham_idx = [6, 7, 8, 9, 10]
+active_idx = [i for i, f in enumerate(mat_files) if os.path.basename(f).replace('_model_fits.mat', '') in expected_active]
+sham_idx = [i for i, f in enumerate(mat_files) if os.path.basename(f).replace('_model_fits.mat', '') in expected_sham]
 
 timeline_labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', '24h', '1 week']
 run_for_evo = 0  # 0 corresponds to 'Pre'
@@ -135,7 +151,7 @@ print(f"Loaded {S} subjects with {P} parameters.")
 # =============================================================================
 # 3. HELPER FUNCTION: SCIENCE-STYLE BOXPLOTS
 # =============================================================================
-def draw_science_boxplots(ax, df, x_col, y_col, hue_col, x_order):
+def draw_science_boxplots(ax, df, x_col, y_col, hue_col, x_order, seed=0):
     box_width = 0.35
     line_weight = 1.2
 
@@ -165,7 +181,11 @@ def draw_science_boxplots(ax, df, x_col, y_col, hue_col, x_order):
                         cap.set_color('black')
                         cap.set_linewidth(line_weight)
 
-                    jitter = np.random.uniform(-box_width / 4, box_width / 4, size=len(subset))
+                    # Keep the original scatter style but fix horizontal jitter
+                    # independently per group/timepoint, so sham is unchanged
+                    # between the full and sTBI-only plots.
+                    rng = np.random.default_rng(seed + 2*i + j)
+                    jitter = rng.uniform(-box_width / 4, box_width / 4, size=len(subset))
                     ax.scatter(np.full_like(subset, pos) + jitter, subset,
                                facecolors=COLORS[hue_val], edgecolors='black',
                                alpha=0.8, s=35, zorder=3, linewidth=0.8)
@@ -192,7 +212,8 @@ def draw_science_boxplots(ax, df, x_col, y_col, hue_col, x_order):
                     cap.set_color('black')
                     cap.set_linewidth(line_weight)
 
-                jitter = np.random.uniform(-box_width / 4, box_width / 4, size=len(subset))
+                rng = np.random.default_rng(seed + i)
+                jitter = rng.uniform(-box_width / 4, box_width / 4, size=len(subset))
                 ax.scatter(np.full_like(subset, pos) + jitter, subset,
                            facecolors=color, edgecolors='black',
                            alpha=0.8, s=35, zorder=3, linewidth=0.8)
@@ -209,6 +230,35 @@ print("\n=== GENERATING MASTER FIGURE 2 WITH t0 ===")
 
 target_params = ['X', 'Y', 'Z', 'Alpha', 'Beta', 'T0', 'EMG']
 param_indices = [find_param_index(tp, pnames) for tp in target_params]
+
+# Move the original column B to a separate supplementary figure, preserving
+# the original group means, timepoints, markers, colors and axis definitions.
+if args.acute_only:
+    fig, axes = plt.subplots(4, 2, figsize=(11, 12.2))
+    for (p, raw_name), target_name, ax in zip(param_indices, target_params, axes.flat):
+        disp = {'X': r'$S_{CC}$', 'Y': r'$S_{CT}$', 'Z': r'$S_{IT}$', 'T0': r'$t_0$', 'EMG': 'EMG'}.get(target_name, GREEK_MAP.get(raw_name, raw_name))
+        daily_delta = params_full[:, 0:5, 1, p] - params_full[:, 0:5, 0, p]
+        x_days = np.arange(1, 6)
+        ax.plot(x_days, np.nanmean(daily_delta[active_idx, :], axis=0), '-o', color=COLOR_ACT, markeredgecolor='black', linewidth=2.5, markersize=8)
+        ax.plot(x_days, np.nanmean(daily_delta[sham_idx, :], axis=0), '-s', color=COLOR_SHM, markeredgecolor='black', linewidth=2.5, markersize=8)
+        ax.axhline(0, color='black', linestyle='--', linewidth=1.2)
+        ax.set_xticks(x_days, [f'Day {d}' for d in x_days])
+        ax.set_ylabel('Δ (Post - Pre)')
+        ax.set_title(disp, loc='left', fontweight='bold')
+        ax.spines[['top', 'right']].set_visible(False)
+        ax.tick_params(top=False, right=False, which='both')
+    axes.flat[-1].set_visible(False)
+    handles = [Line2D([0], [0], color=COLOR_ACT, marker='o', markeredgecolor='black', linewidth=2.5, label='Active'),
+               Line2D([0], [0], color=COLOR_SHM, marker='s', markeredgecolor='black', linewidth=2.5, label='Sham')]
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    fig.legend(handles=handles, loc='upper center', ncol=2, frameon=False)
+    output = FIGURES_DIR / ('SM_Figure9.png' if args.cohort == 'all' else 'Acute_changes_sTBI.png')
+    fig.savefig(output, dpi=200)
+    print(f'Saved to: {output}')
+    if os.environ.get('SHOW_FIGURE', '0') != '0':
+        plt.show()
+    plt.close(fig)
+    raise SystemExit(0)
 
 print("Parameters included in this figure:")
 for target, (_, raw_name) in zip(target_params, param_indices):
@@ -260,7 +310,7 @@ for row_idx, ((p, raw_name), target_name) in enumerate(zip(param_indices, target
     # -------------------------------------------------------------------------
     ax_a = axs[row_idx, 0]
     if not df_evo.empty:
-        draw_science_boxplots(ax_a, df_evo, 'Timepoint', 'Value', 'Group', valid_timeline)
+        draw_science_boxplots(ax_a, df_evo, 'Timepoint', 'Value', 'Group', valid_timeline, seed=1000+100*row_idx)
 
     ax_a.set_ylabel(f'{param_disp}', fontweight='bold', fontsize=22)
 
@@ -268,23 +318,19 @@ for row_idx, ((p, raw_name), target_name) in enumerate(zip(param_indices, target
         ax_a.set_title('A', loc='left', fontweight='bold')
 
     # -------------------------------------------------------------------------
-    # COLUMN B: Acute Shift Line Plot (Post - Pre)
+    # COLUMN B: Individual Day 1 -> 24 h -> 1 week trajectories
     # -------------------------------------------------------------------------
     ax_b = axs[row_idx, 1]
-    daily_delta = params_full[:, 0:5, 1, p] - params_full[:, 0:5, 0, p]
-    mean_act = np.nanmean(daily_delta[active_idx, :], axis=0)
-    mean_shm = np.nanmean(daily_delta[sham_idx, :], axis=0)
-    x_days = np.arange(1, 6)
-
-    ax_b.plot(x_days, mean_act, '-o', color=COLOR_ACT, markeredgecolor='black',
-              linewidth=2.5, markersize=8, label='Active')
-    ax_b.plot(x_days, mean_shm, '-s', color=COLOR_SHM, markeredgecolor='black',
-              linewidth=2.5, markersize=8, label='Sham')
-    ax_b.axhline(0, color='black', linestyle='--', linewidth=1.2)
-
-    ax_b.set_xticks(x_days)
-    ax_b.set_xticklabels(['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'])
-    ax_b.set_ylabel(f'Δ (Post - Pre)')
+    followup_sessions = [0, 5, 6]
+    for group_indices, color, marker in [(active_idx, COLOR_ACT, 'o'), (sham_idx, COLOR_SHM, 's')]:
+        # Each line follows one subject, retaining the actual parameter values.
+        for s in group_indices:
+            ax_b.plot([0, 1, 2], params_full[s, followup_sessions, run_for_evo, p],
+                      color=color, marker=marker, markeredgecolor='black', markeredgewidth=0.8,
+                      linewidth=1.7, markersize=5.5, alpha=0.9)
+    ax_b.set_xticks([0, 1, 2], ['Day 1', '24h', '1 week'])
+    ax_b.set_xlim(-0.16, 2.16)
+    ax_b.set_ylim(ax_a.get_ylim())
 
     if row_idx == 0:
         ax_b.set_title('B', loc='left', fontweight='bold')
@@ -294,14 +340,14 @@ for row_idx, ((p, raw_name), target_name) in enumerate(zip(param_indices, target
     # -------------------------------------------------------------------------
     ax_c = axs[row_idx, 2]
     if not df_long.empty:
-        draw_science_boxplots(ax_c, df_long, 'Group', 'Value', None, ['Active', 'Sham'])
+        draw_science_boxplots(ax_c, df_long, 'Group', 'Value', None, ['Active', 'Sham'], seed=1050+100*row_idx)
         ax_c.axhline(0, color='black', linestyle='--', linewidth=1.2)
 
         # Calculate Stats
         active_vals = df_long[df_long['Group'] == 'Active']['Value'].dropna()
         sham_vals = df_long[df_long['Group'] == 'Sham']['Value'].dropna()
         if len(active_vals) > 0 and len(sham_vals) > 0:
-            stat, p_val = mannwhitneyu(active_vals, sham_vals, alternative='two-sided')
+            stat, p_val = mannwhitneyu(active_vals, sham_vals, alternative='two-sided', method='exact')
             u_max = len(active_vals) * len(sham_vals)
             r_rb = abs(1 - (2 * stat) / u_max)
 
@@ -356,13 +402,13 @@ fig.legend(handles=legend_elements, loc='lower center', ncol=2, frameon=False,
 
 output_dir = str(FIGURES_DIR)
 os.makedirs(output_dir, exist_ok=True)
-output_file = os.path.join(output_dir, 'Figure2.png')
+output_file = os.path.join(output_dir, 'Figure2.png' if args.cohort == 'all' else 'SM_Figure8.png')
 
 print("Figure 2 with t0 successfully generated. Saving high-res version...")
 plt.savefig(output_file, dpi=200)
 print(f"Saved to: {output_file}")
 
-if os.environ.get('SHOW_FIGURE', '1') != '0':
+if os.environ.get('SHOW_FIGURE', '0') != '0':
     print("Save complete. Displaying on screen...")
     plt.show()
 else:
