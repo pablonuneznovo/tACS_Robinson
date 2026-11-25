@@ -1,3 +1,8 @@
+# Reproducing the original paper results
+
+This folder contains the minimal analysis scripts for the original paper
+pipeline and its Supplementary Information.
+
 ## Contents
 
 - `matlab/N1_fit_data_XYZab.m` — FieldTrip preprocessing, Welch PSD estimation,
@@ -19,6 +24,8 @@
 - `python/analyze_alpha_crsr_robustness.py` — alpha–CRS-R repeat-fit sensitivity analysis reported in the manuscript.
 - `python/analyze_followup_rank_biserial_cis.py` — signed effect sizes, confidence intervals and uncorrected p-values at both follow-ups (Supplementary Table T2).
 - `python/analyze_stbi_followup_sensitivity.py` — full-cohort and sTBI-only exact follow-up comparisons.
+- `python/analyze_stbi_followup_confidence_intervals.py` — participant-bootstrap 95% CIs for the sTBI-only follow-up contrasts.
+- `python/analyze_25hz_followup_confidence_intervals.py` — participant-bootstrap 95% CIs for follow-up contrasts from the 25-Hz refits.
 - `python/clinical_crsr.py` — shared CRS-R table reader.
 - `python/reproduction_config.py` — portable data and output path configuration.
 
@@ -123,6 +130,8 @@ Generate Supplementary Table T2 with:
 ```bash
 python python/analyze_followup_rank_biserial_cis.py
 python python/analyze_stbi_followup_sensitivity.py
+python python/analyze_stbi_followup_confidence_intervals.py
+python python/analyze_25hz_followup_confidence_intervals.py
 ```
 
 Figures and associated statistics are written to `figures/`. The scripts retain
